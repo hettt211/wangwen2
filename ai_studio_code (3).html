@@ -99,37 +99,12 @@
         .grid-card { background: #fff; border-radius: 12px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
         .grid-card:active { opacity: 0.8; }
         .grid-card-cover { width: 100%; aspect-ratio: 3/4; background-size: cover; background-position: center; position: relative; }
-        .card-badge { display: none; /* 彻底隐藏角标 */ }
-        .grid-card-info { padding: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .grid-card-title { font-size: 14px; font-weight: 500; color: #333; line-height: 1.4; }
-        .grid-card-description {
-            font-size: 12px;
-            color: #888;
-            line-height: 1.5;
-            margin-top: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            margin-bottom: 6px; /* 为标签留出空间 */
-        }
-        .grid-card-meta { display: none; /* 隐藏旧的 meta 信息 */ }
-        .grid-card-tags { 
-            display: flex; /* 重新显示标签行 */
-            gap: 4px;
-            flex-wrap: nowrap;
-            overflow: hidden;
-        }
-        .grid-tag {
-            font-size: 10px;
-            background: #f0f0f0;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #888;
-            flex-shrink: 0;
-            white-space: nowrap;
-        }
+        .card-badge { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.5); color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 4px; }
+        .grid-card-info { padding: 8px; flex: 1; display: flex; flex-direction: column; }
+        .grid-card-title { font-size: 14px; font-weight: 500; color: #333; margin-bottom: 6px; line-height: 1.4; flex-grow: 1; }
+        .grid-card-meta { font-size: 11px; color: #999; }
+        .grid-card-tags { display: flex; gap: 4px; flex-wrap: nowrap; overflow: hidden; margin-bottom: 6px; }
+        .grid-tag { font-size: 10px; background: #f5f5f5; padding: 2px 6px; border-radius: 4px; color: #666; flex-shrink: 0; white-space: nowrap; }
         
         /* 大型横幅广告 */
         .large-banner { margin-top: 16px; display: flex; gap: 10px; }
@@ -349,101 +324,102 @@
             display: flex;
             flex-direction: column;
             color: #fff;
-            padding: 100px 24px 80px; /* 留出顶部和底部空间 */
-            text-align: center;
         }
 
-        #highlights-panel .highlight-description {
-            font-size: 16px;
-            font-weight: bold;
-            line-height: 1.6;
-            margin-bottom: 24px;
-            height: 50px; /* 固定高度防止切换时跳动 */
-        }
-
-        #highlights-carousel-container {
+        #highlights-panel-content {
             flex: 1;
-            overflow: hidden;
+            overflow: hidden; /* Changed from auto */
             position: relative;
-            width: 100%;
+            display: flex;
+            padding: 0; /* Remove padding */
         }
 
-        #highlights-carousel-track {
+        .highlight-carousel-track {
             display: flex;
             height: 100%;
             transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        
-        .highlight-review-slide {
-            width: 100%;
+
+        .highlight-slide {
+            width: 100vw; /* Use viewport width */
             height: 100%;
             flex-shrink: 0;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
+            align-items: center;
+            padding: 120px 24px 80px; /* Top, sides, bottom padding */
+            text-align: center;
         }
 
-        .review-card {
-            background: rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
+        .highlight-slide .slide-tag {
+            background: rgba(0,0,0,0.2);
+            color: #fff;
+            padding: 6px 14px;
             border-radius: 16px;
-            padding: 24px;
-            width: 100%;
-        }
-        
-        .review-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            font-size: 13px;
+            font-weight: bold;
             margin-bottom: 24px;
         }
 
-        .review-card-author {
+        .highlight-slide .slide-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+
+        .highlight-slide .slide-review-card {
+            background: rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .highlight-slide .review-author {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
-        .review-card-author .avatar { font-size: 28px; }
-        .review-card-author .username { font-size: 14px; font-weight: bold; }
-        
-        .review-card-likes {
+        .highlight-slide .review-author .avatar {
+            font-size: 24px;
+        }
+        .highlight-slide .review-author .username {
             font-size: 13px;
             color: #ccc;
         }
-        .review-card-likes i { margin-left: 6px; }
 
-        .review-card-content {
-            font-size: 18px;
-            line-height: 1.7;
-            margin-bottom: 24px;
-            min-height: 80px; /* 固定高度防止跳动 */
-        }
-        
-        .review-card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .highlight-slide .review-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #fff;
         }
 
-        .review-card-footer .replies-link {
-            font-size: 12px;
-            color: #aaa;
-            cursor: pointer;
-        }
-        
         .carousel-dots {
+            position: absolute;
+            bottom: 60px; /* Adjust to be above bottom bar space */
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             gap: 8px;
+            z-index: 120;
         }
+
         .carousel-dots .dot {
             width: 6px;
             height: 6px;
             background: rgba(255,255,255,0.3);
             border-radius: 50%;
-            transition: background 0.3s;
+            transition: all 0.3s;
         }
         .carousel-dots .dot.active {
             background: #fff;
+            transform: scale(1.2);
         }
         
         /* 更新：常驻底部信息栏样式 */
@@ -721,13 +697,11 @@
         </div>
 
         <div id="highlights-panel" class="content-panel">
-            <div id="highlight-top-description" class="highlight-description">
-                <!-- JS Populated -->
+            <div id="highlights-panel-content" class="highlight-carousel-track">
+                <!-- JS动态填充结构化亮点 -->
             </div>
-            <div id="highlights-carousel-container">
-                <div id="highlights-carousel-track">
-                    <!-- JS Populated -->
-                </div>
+            <div class="carousel-dots" id="highlights-carousel-dots">
+                <!-- JS动态填充分页点 -->
             </div>
         </div>
 
@@ -777,7 +751,7 @@
                 {
                     title: "逻辑爆强世界观（男青年最爱）",
                     tag: "世界观硬核",
-                    description: "诡秘的设定像数学公式一样能自洽，复杂但有秩序，越听越沉浸。",
+                    description: "男青年特别吃“逻辑严密的系统”。诡秘的设定像数学公式一样能自洽，复杂但有秩序，越听越沉浸。",
                     reviews: [
                         { avatar: "👤", user: "用户_9527", content: "剧情环环相扣、逻辑清晰。", likes: 1247 },
                         { avatar: "👤", user: "逻辑控", content: "世界观缔造很有画面感，非常有代入感。", likes: 892 },
@@ -788,7 +762,7 @@
                 {
                     title: "反差魅力主角（怂但能扛）",
                     tag: "主角魅力",
-                    description: "主角“普通但努力”“害怕但不逃”，他谨慎、聪明、有底线，是最具现实感的男性角色。",
+                    description: "男青年喜欢“普通但努力”“害怕但不逃”的主角。他谨慎、聪明、有底线，是最具现实感的男性角色。",
                     reviews: [
                         { avatar: "👤", user: "克莱恩粉", content: "真正的现象级小说…克莱恩是一个三观很正…顺理成章不圣母。", likes: 3421 },
                         { avatar: "👤", user: "男主控", content: "主角性格也很棒，不圣母也不无脑杀戮，有小我也有大爱。", likes: 2567 },
@@ -999,6 +973,7 @@
     ];
 
     let currentBook = null;
+    let carouselInterval = null;
     let autoMode = true;
     let highlightCarouselInterval = null;
     let currentHighlightIndex = 0;
@@ -1051,18 +1026,21 @@
          
          // 确保 tags 存在且是数组
          const tags = Array.isArray(book.tags) ? book.tags : [];
-
+         
          card.innerHTML = `
              <div class="grid-card-cover" style="background-image: url('${book.cover}')">
-                <!-- 角标被CSS隐藏 -->
+                <div class="card-badge" style="background: ${book.badge === '会员' ? 'var(--primary)' : '#ffd700'}; color: ${book.badge === '会员' ? '#fff' : '#333'};">${book.badge}</div>
              </div>
              <div class="grid-card-info">
+                 <div class="grid-card-title">${book.title}</div>
                  <div>
-                    <div class="grid-card-title">${book.albumTitle}</div>
-                    <div class="grid-card-description">${book.title}</div>
-                 </div>
-                 <div class="grid-card-tags">
-                    ${tags.map(tag => `<span class="grid-tag">${tag}</span>`).join('')}
+                    <div class="grid-card-tags">
+                        ${tags.map(tag => `<span class="grid-tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="grid-card-meta">
+                        <i class="fas fa-play-circle" style="margin-right:3px; color: #999;"></i>
+                        <span style="color: #999;">${book.plays || '未知'}</span>
+                    </div>
                  </div>
              </div>
          `;
@@ -1082,26 +1060,50 @@
              video.play().catch(e => console.error("视频播放失败:", e));
          }
 
-         // 2. 设置常驻底部信息栏
-         document.getElementById('player-bar-title').innerText = book.albumTitle || book.title;
-         document.getElementById('player-bar-cover').src = book.cover;
-         document.getElementById('player-bar-desc').innerText = book.description || '';
-         document.getElementById('player-bar-progress').innerText = `已完结 · 共${book.episodes || 0}集`;
-         
-         const tagsContainer = document.getElementById('player-bar-tags');
-         tagsContainer.innerHTML = '';
-         const infoTags = [book.ranking, book.badge, book.plays].filter(Boolean);
-         infoTags.forEach(tag => {
-            const tagEl = document.createElement('div');
-            tagEl.className = 'info-tag';
-            tagEl.innerText = tag;
-            tagsContainer.appendChild(tagEl);
-         });
+         // 2. 设置亮点页
+         const highlightsPanel = document.getElementById('highlights-panel');
+         const highlightsContent = document.getElementById('highlights-panel-content');
+         const highlightsBarTitle = document.getElementById('highlights-bar-title');
+         const dotsContainer = document.getElementById('highlights-carousel-dots');
 
+         // 2.1 设置背景色
+         highlightsPanel.style.backgroundColor = book.themeColor || '#181818';
+         document.getElementById('player-bar-title').innerText = book.albumTitle || book.title;
+         document.getElementById('player-bar-desc').innerText = book.description || ''; // 设置描述
+
+         // 2.2 填充内容
+         highlightsContent.innerHTML = '';
+         dotsContainer.innerHTML = ''; // 清空分页点
+         if (book.highlights) {
+            book.highlights.forEach((highlight, index) => {
+                // 创建 slide
+                const slide = document.createElement('div');
+                slide.className = 'highlight-slide';
+                slide.innerHTML = `
+                    <div class="slide-tag">${highlight.tag}</div>
+                    <div class="slide-title">${highlight.title}</div>
+                    <div class="slide-review-card">
+                        <div class="review-author">
+                            <div class="avatar">${highlight.reviews[0].avatar}</div>
+                            <div class="username">${highlight.reviews[0].user}</div>
+                        </div>
+                        <div class="review-text">“${highlight.reviews[0].content}”</div>
+                    </div>
+                `;
+                highlightsContent.appendChild(slide);
+
+                // 创建分页点
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => showHighlightSlide(index);
+                dotsContainer.appendChild(dot);
+            });
+         }
 
          // 3. 重置到视频tab并打开播放器
-         switchImmersiveTab('video'); // 确保从视频页开始
+         switchImmersiveTab('video');
          player.classList.add('active');
+         startHighlightCarousel(); // 打开播放器时开始轮播
      }
 
      // 关闭播放器
@@ -1109,10 +1111,12 @@
          document.getElementById('player').classList.remove('active');
          const video = document.getElementById('immersive-video');
          video.pause();
+         stopHighlightCarousel(); // 关闭时停止轮播
      }
      
      // 切换沉浸页的Tab
      function switchImmersiveTab(tabName) {
+        const player = document.getElementById('player');
         const videoPanel = document.getElementById('video-panel');
         const highlightsPanel = document.getElementById('highlights-panel');
         const tabVideo = document.getElementById('tab-video');
@@ -1120,80 +1124,38 @@
         const video = document.getElementById('immersive-video');
         const bottomBar = document.querySelector('.player-bottom-bar');
 
-        bottomBar.style.display = 'block'; // 确保底部栏一直显示
-
         if (tabName === 'video') {
             videoPanel.classList.add('active');
             highlightsPanel.classList.remove('active');
             tabVideo.classList.add('active');
             tabHighlights.classList.remove('active');
+            bottomBar.style.display = 'flex';
             video.play().catch(e => {}); // 切换回来时尝试播放
-            stopHighlightCarousel();
+            stopHighlightCarousel(); // 停止轮播
         } else {
-            // --- 动态填充新的亮点轮播内容 ---
-            const highlightsPanel = document.getElementById('highlights-panel');
-            const descriptionContainer = document.getElementById('highlight-top-description');
-            const highlightsTrack = document.getElementById('highlights-carousel-track');
-            
-            highlightsPanel.style.backgroundColor = currentBook.themeColor || '#181818';
-            highlightsTrack.innerHTML = ''; // 清空旧内容
-
-            if (currentBook.highlights && currentBook.highlights.length > 0) {
-                currentBook.highlights.forEach(highlight => {
-                    const firstReview = highlight.reviews[0];
-                    const slide = document.createElement('div');
-                    slide.className = 'highlight-review-slide';
-                    slide.innerHTML = `
-                        <div class="review-card">
-                            <div class="review-card-header">
-                                <div class="review-card-author">
-                                    <div class="avatar">${firstReview.avatar}</div>
-                                    <div class="username">${firstReview.user}</div>
-                                </div>
-                                <div class="review-card-likes">
-                                    <span>${firstReview.likes}</span><i class="fas fa-thumbs-up"></i>
-                                </div>
-                            </div>
-                            <div class="review-card-content">“${firstReview.content}”</div>
-                            <div class="review-card-footer">
-                                <span class="replies-link">查看 ${Math.floor(Math.random() * 20) + 5} 条回复 <i class="fas fa-chevron-right" style="font-size: 10px;"></i></span>
-                                <div class="carousel-dots">
-                                    ${currentBook.highlights.map((_, i) => `<div class="dot" data-index="${i}"></div>`).join('')}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    highlightsTrack.appendChild(slide);
-                });
-            }
-            // --- 填充结束 ---
-
             videoPanel.classList.remove('active');
             highlightsPanel.classList.add('active');
             tabVideo.classList.remove('active');
             tabHighlights.classList.add('active');
+            bottomBar.style.display = 'none';
             video.pause(); // 切换走时暂停视频
-            startHighlightCarousel();
+            startHighlightCarousel(); // 开始轮播
         }
      }
 
-     // --- 新的亮点轮播逻辑 ---
+     // --- 亮点轮播逻辑 ---
      function startHighlightCarousel() {
         if (highlightCarouselInterval) clearInterval(highlightCarouselInterval);
-        currentHighlightIndex = -1; // Start before the first slide
+        currentHighlightIndex = 0;
+        showHighlightSlide(currentHighlightIndex);
         
-        const updateSlide = () => {
+        highlightCarouselInterval = setInterval(() => {
             const totalSlides = currentBook?.highlights?.length || 0;
-            if (totalSlides > 0) {
+            if (totalSlides > 1) {
                 currentHighlightIndex = (currentHighlightIndex + 1) % totalSlides;
                 showHighlightSlide(currentHighlightIndex);
             }
-        };
-
-        updateSlide(); // Show first slide immediately
-        if ((currentBook?.highlights?.length || 0) > 1) {
-            highlightCarouselInterval = setInterval(updateSlide, 5000); // Switch every 5 seconds
-        }
+        }, 5000); // 5秒切换一次
      }
 
      function stopHighlightCarousel() {
@@ -1204,22 +1166,18 @@
      }
 
      function showHighlightSlide(index) {
-        const track = document.getElementById('highlights-carousel-track');
-        const descriptionContainer = document.getElementById('highlight-top-description');
-        const allDots = document.querySelectorAll('.carousel-dots .dot');
+        const track = document.getElementById('highlights-panel-content');
+        const dots = document.querySelectorAll('#highlights-carousel-dots .dot');
+        const totalSlides = dots.length;
 
-        if (!currentBook || !currentBook.highlights[index]) return;
-
-        // 更新顶部描述
-        descriptionContainer.innerText = currentBook.highlights[index].description;
-        
-        // 移动轨道
-        track.style.transform = `translateX(-${index * 100}%)`;
-
-        // 更新所有卡片中的分页符状态
-        allDots.forEach(dot => {
-            dot.classList.toggle('active', parseInt(dot.dataset.index) === index);
-        });
+        if (index >= 0 && index < totalSlides) {
+            currentHighlightIndex = index;
+            track.style.transform = `translateX(-${index * 100}%)`;
+            
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
      }
      
      // 显示合集列表 (保留弹窗逻辑)
