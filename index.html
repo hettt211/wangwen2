@@ -756,6 +756,10 @@
 </div>
 
 <script>
+    // --- 动态路径解决方案 ---
+    const isGithubPages = window.location.hostname.includes('github.io');
+    const basePath = isGithubPages ? '/wangwen/' : '';
+
     // 书籍数据，包含男青年画像内容
     const books = [
         {
@@ -884,7 +888,7 @@
         {
             id: 4,
             persona: 'female-middle-aged',
-            title: "诡秘之主｜在失序的世界，如何守护一个清醒的自己",
+            title: "在失序的世界，如何守护一个清醒的自己",
             author: "爱潜水的乌贼",
             tags: ["女性角色闪光", "情绪价值"],
             description: "见证女性角色的独立与光芒，感受在孤独与责任中的每一次温柔而坚定的选择。",
@@ -920,7 +924,7 @@
         {
             id: 5,
             persona: 'male-elderly',
-            title: "诡秘之主｜一个正直、稳重、有分寸的品质故事",
+            title: "一个正直、稳重、有分寸的品质故事",
             author: "爱潜水的乌贼",
             tags: ["故事扎实可信", "主角正直"],
             description: "故事逻辑严密，节奏沉稳，演绎一个有原则、有担当、有底线的成熟男人的史诗。",
@@ -1053,7 +1057,7 @@
          const tags = Array.isArray(book.tags) ? book.tags : [];
 
          card.innerHTML = `
-             <div class="grid-card-cover" style="background-image: url('${book.cover}')">
+             <div class="grid-card-cover" style="background-image: url('${basePath + book.cover}')">
                 <!-- 角标被CSS隐藏 -->
              </div>
              <div class="grid-card-info">
@@ -1078,13 +1082,13 @@
          // 1. 设置视频
          const video = document.getElementById('immersive-video');
          if (book.videoFile) {
-             video.src = book.videoFile;
+             video.src = basePath + book.videoFile;
              video.play().catch(e => console.error("视频播放失败:", e));
          }
 
          // 2. 设置常驻底部信息栏
          document.getElementById('player-bar-title').innerText = book.albumTitle || book.title;
-         document.getElementById('player-bar-cover').src = book.cover;
+         document.getElementById('player-bar-cover').src = basePath + book.cover;
          document.getElementById('player-bar-desc').innerText = book.description || '';
          document.getElementById('player-bar-progress').innerText = `已完结 · 共${book.episodes || 0}集`;
          
