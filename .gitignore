@@ -1,0 +1,15 @@
+# Dependencies
+/node_modules
+/mcp-server-weread/node_modules
+
+# Build files
+/mcp-server-weread/build
+
+# Cache
+/wereader/cache
+
+# Large media files
+*.mp4
+
+# OS-generated files
+.DS_Store

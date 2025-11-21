@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>有声小说App - 沉浸漫改版</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff3b30;
+            --bg-body: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-main: #1c1c1e;
+            --text-sub: #8e8e93;
+            --nav-height: 80px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 手机容器 */
+        #app-shell {
+            width: 100%;
+            max-width: 414px; /* iPhone Pro Max 宽度 */
+            height: 100%;
+            max-height: 896px;
+            background-color: var(--bg-body);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 40px rgba(0,0,0,0.2);
+            border-radius: 0; 
+        }
+        
+        /* 在桌面端显示圆角模拟手机 */
+        @media (min-width: 450px) {
+            #app-shell {
+                height: 90vh;
+                border-radius: 40px;
+                border: 8px solid #333;
+            }
+        }
+
+        /* --- 首页部分 --- */
+        .home-container { flex: 1; overflow-y: auto; padding-bottom: 50px; }
+        
+        /* 顶部搜索区 */
+        .header { padding: 8px 16px 0; background: #fff; position: sticky; top: 0; z-index: 10; }
+        .search-bar { background: #f5f5f5; height: 32px; border-radius: 16px; display: flex; align-items: center; padding: 0 12px; color: #999; font-size: 13px; margin-bottom: 6px; }
+        
+        /* 标签导航栏 */
+        .nav-tabs { display: flex; gap: 0; padding: 0 16px 6px; background: #fff; overflow-x: auto; scrollbar-width: none; }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .nav-tab { flex-shrink: 0; padding: 6px 12px; font-size: 15px; color: #333; position: relative; white-space: nowrap; }
+        .nav-tab.active { color: #333; font-weight: bold; }
+        .nav-tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: var(--primary); border-radius: 2px; }
+        .nav-badge { display: inline-block; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; margin-left: 4px; vertical-align: top; }
+        
+        /* 本周收听统计区域 */
+        .ai-guide { padding: 8px 16px 6px; background: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .ai-guide-text { font-size: 13px; color: #333; font-weight: 500; }
+        .vip-promotion { font-size: 11px; color: var(--primary); background: rgba(255,59,48,0.1); padding: 4px 8px; border-radius: 12px; }
+        
+        /* 横幅区域 */
+        .banner-section { padding: 0 16px 6px; background: #fff; }
+        .banner-title { font-size: 14px; color: #333; margin-bottom: 6px; }
+        .banner-title .vip-tag { font-size: 10px; color: var(--primary); background: rgba(255,59,48,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+        
+        /* 横向滑动卡片 - 3:4比例 */
+        .horizontal-cards { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+        .horizontal-cards::-webkit-scrollbar { display: none; }
+        .h-card { flex-shrink: 0; width: 100px; height: 133px; border-radius: 8px; overflow: hidden; position: relative; background-size: cover; background-position: center; cursor: pointer; }
+        .h-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.3), transparent); color: #fff; }
+        .h-card-title { font-size: 10px; font-weight: bold; margin-bottom: 4px; line-height: 1.3; }
+        .h-card-subtitle { font-size: 9px; opacity: 0.9; }
+        .h-card-btn { background: var(--primary); color: #fff; border: none; padding: 4px 8px; border-radius: 8px; font-size: 9px; cursor: pointer; white-space: nowrap; }
+        
+        /* 推荐区域 */
+        .recommend-section { padding: 8px 16px; }
+        .section-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+        .section-more { font-size: 12px; color: #999; }
+        
+        /* 列表卡片容器 */
+        #list-cards { margin-bottom: 8px; }
+        
+        /* 双列卡片布局 */
+        .feed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-card { background: #fff; border-radius: 12px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
+        .grid-card:active { opacity: 0.8; }
+        .grid-card-cover { width: 100%; aspect-ratio: 3/4; background-size: cover; background-position: center; position: relative; }
+        .card-badge { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.5); color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 4px; }
+        .grid-card-info { padding: 8px; flex: 1; display: flex; flex-direction: column; }
+        .grid-card-title { font-size: 14px; font-weight: 500; color: #333; margin-bottom: 6px; line-height: 1.4; flex-grow: 1; }
+        .grid-card-meta { font-size: 11px; color: #999; }
+        .grid-card-tags { display: flex; gap: 4px; flex-wrap: nowrap; overflow: hidden; margin-bottom: 6px; }
+        .grid-tag { font-size: 10px; background: #f5f5f5; padding: 2px 6px; border-radius: 4px; color: #666; flex-shrink: 0; white-space: nowrap; }
+        
+        /* 大型横幅广告 */
+        .large-banner { margin-top: 16px; display: flex; gap: 10px; }
+        .large-banner-item { flex: 1; height: 180px; border-radius: 12px; background-size: cover; background-position: center; cursor: pointer; }
+        
+        /* 列表卡片（单列） */
+        .list-card { display: flex; gap: 8px; background: #fff; padding: 8px; margin-bottom: 6px; cursor: pointer; border-radius: 8px; }
+        .list-card-cover { width: 60px; height: 60px; border-radius: 6px; background-size: cover; background-position: center; flex-shrink: 0; }
+        .list-card-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .list-card-title { font-size: 13px; font-weight: 500; color: #333; margin-bottom: 2px; }
+        .list-card-desc { font-size: 11px; color: #999; line-height: 1.3; }
+        .list-card-badge { font-size: 9px; color: var(--primary); border: 1px solid var(--primary); padding: 2px 6px; border-radius: 4px; align-self: flex-start; }
+
+        /* --- 沉浸式播放器 (Immersive Player) --- */
+        .immersive-player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+            z-index: 100;
+            transform: translateY(100%); /* 默认隐藏 */
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+        }
+        .immersive-player.active { transform: translateY(0); }
+
+        /* 1. 顶部：AI漫画轮播区 */
+        .visual-area {
+            position: relative;
+            width: 100%;
+            height: 55%; /* 占据上半部分 */
+            overflow: hidden;
+        }
+        
+        .carousel-track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease;
+        }
+        
+        .carousel-item {
+            min-width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        /* 漫画风格滤镜 */
+        .comic-filter {
+            filter: contrast(1.1) saturate(1.2); 
+        }
+        .comic-filter::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 60%, #1a1a1a 100%);
+        }
+
+        /* 顶部返回与标题 */
+        .player-top-bar {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            padding: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .p-back { font-size: 20px; width: 32px; height: 32px; background:rgba(0,0,0,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
+        .p-book-title { font-weight: bold; font-size: 16px; }
+
+        /* 新：沉浸页底部信息浮层 */
+        .player-bottom-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px 30px; /* 适配底部安全区 */
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.7) 70%, transparent 100%);
+            color: #fff;
+        }
+
+        .p-tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 4px;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+        .p-tags::-webkit-scrollbar { display: none; } /* Chrome, Safari */
+
+        .p-tag-item {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .p-tag-item:hover { background: rgba(255,255,255,0.3); }
+
+        .p-album-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .p-album-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .p-album-details {
+            flex: 1;
+            min-width: 0; /* 防止文本过长撑开布局 */
+        }
+
+        .p-album-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .p-album-progress {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .p-listen-full {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        /* --- 新：沉浸式播放器 V2 --- */
+        .immersive-player .top-nav-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 50px 16px 10px;
+            z-index: 110;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
+        }
+        
+        .immersive-player .back-btn {
+            font-size: 20px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .immersive-player .tab-switcher {
+            display: flex;
+            background: rgba(255,255,255,0.2);
+            border-radius: 18px;
+            padding: 2px;
+            backdrop-filter: blur(8px);
+        }
+        
+        .immersive-player .switcher-btn {
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .immersive-player .switcher-btn.active {
+            background: #fff;
+            color: #111;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .immersive-player .content-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            transition: opacity 0.4s ease, visibility 0.4s;
+        }
+
+        .immersive-player .content-panel:not(.active) {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        #highlights-panel {
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+        }
+
+        #highlights-panel-content {
+            flex: 1;
+            overflow: hidden; /* Changed from auto */
+            position: relative;
+            display: flex;
+            padding: 0; /* Remove padding */
+        }
+
+        .highlight-carousel-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .highlight-slide {
+            width: 100vw; /* Use viewport width */
+            height: 100%;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 120px 24px 80px; /* Top, sides, bottom padding */
+            text-align: center;
+        }
+
+        .highlight-slide .slide-tag {
+            background: rgba(0,0,0,0.2);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 24px;
+        }
+
+        .highlight-slide .slide-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+
+        .highlight-slide .slide-review-card {
+            background: rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .highlight-slide .review-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .highlight-slide .review-author .avatar {
+            font-size: 24px;
+        }
+        .highlight-slide .review-author .username {
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .highlight-slide .review-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #fff;
+        }
+
+        .carousel-dots {
+            position: absolute;
+            bottom: 60px; /* Adjust to be above bottom bar space */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 120;
+        }
+
+        .carousel-dots .dot {
+            width: 6px;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .carousel-dots .dot.active {
+            background: #fff;
+            transform: scale(1.2);
+        }
+        
+        /* 更新：常驻底部信息栏样式 */
+        .player-bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 16px 30px; /* 适配安全区 */
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 30%, rgba(0,0,0,0.7) 80%, transparent 100%);
+            z-index: 115; /* 高于内容面板，低于轮播点 */
+            color: #fff;
+        }
+
+        .player-bottom-bar .info-tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .player-bottom-bar .info-tag {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        .player-bottom-bar .main-info {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .main-info .album-cover {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .main-info .album-details .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .main-info .album-details .description {
+            font-size: 12px;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .player-bottom-bar .progress-cta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .progress-cta .progress-text {
+            font-size: 13px;
+            color: #aaa;
+        }
+        
+        /* 视频控制按钮 */
+        .video-controls button {
+            transition: all 0.3s ease;
+        }
+        .video-controls button:hover {
+            background: rgba(0,0,0,0.7) !important;
+            transform: scale(1.1);
+        }
+
+        /* 3. 底部：控制条与畅听按钮 */
+        .control-dock {
+            background: #252525;
+            padding: 16px 20px 30px; /* 适配底部安全区 */
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* 进度条 */
+        .prog-row { display: flex; align-items: center; gap: 10px; font-size: 10px; color: #888; margin-bottom: 14px; }
+        .prog-bar { flex: 1; height: 3px; background: #444; border-radius: 2px; position: relative; }
+        .prog-fill { width: 30%; height: 100%; background: var(--primary); border-radius: 2px; position: relative; }
+        .prog-fill::after { content:''; width:8px; height:8px; background:#fff; border-radius:50%; position:absolute; right:-4px; top:-2.5px; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
+
+        /* 控制按钮行 */
+        .ctrl-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .play-btns { display: flex; align-items: center; gap: 20px; }
+        .btn-icon { font-size: 20px; color: #ddd; }
+        .btn-play { font-size: 36px; color: #fff; }
+
+        /* 畅听全集按钮 */
+        .jump-album-btn {
+            background: linear-gradient(90deg, #ff3b30, #ff9500);
+            border: none;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        /* 悬浮切换按钮 */
+        .switch-mode-btn {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            z-index: 50;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="app-shell">
+    <!-- 首页 -->
+    <div class="home-container">
+        <!-- 顶部搜索栏 -->
+        <div class="header">
+            <div class="search-bar"><i class="fas fa-search" style="margin-right:8px;"></i> 书籍</div>
+            <div class="nav-tabs">
+                <div class="nav-tab">直播<span class="nav-badge"></span></div>
+                <div class="nav-tab active">推荐</div>
+                <div class="nav-tab">解忧路</div>
+                <div class="nav-tab">小说</div>
+                <div class="nav-tab">儿童</div>
+                <div class="nav-tab">相声</div>
+                <div class="nav-tab">段子</div>
+            </div>
+        </div>
+        
+        <!-- 本周收听统计 -->
+        <div class="ai-guide">
+            <div class="ai-guide-text">本周已收听3分钟 <i class="fas fa-chevron-right" style="font-size:12px; margin-left:4px;"></i></div>
+            <div class="vip-promotion">VIP 续费仅需0.32元/天</div>
+        </div>
+        
+        <!-- 横向卡片区域（3:4比例） -->
+        <div class="banner-section">
+            <div class="horizontal-cards">
+                <!-- Card 1: VIP会员卡片 - 粉红色渐变 -->
+                <div class="h-card" style="background: linear-gradient(135deg, #d4928b 0%, #c8827b 100%);">
+                    <div style="padding:10px; height:100%; display:flex; flex-direction:column; justify-content:space-between;">
+                        <div>
+                            <div style="background:#b8756f; width:fit-content; padding:3px 6px; border-radius:4px; margin-bottom:6px;">
+                                <span style="color:#fff; font-size:8px;">喜马拉雅VIP会员</span>
+                            </div>
+                            <div style="font-size:10px; font-weight:bold; color:#333; line-height:1.3;">收听领奖 | 最<br>高加赠10天VIP</div>
+                        </div>
+                        <button class="h-card-btn" style="padding:4px 8px; font-size:9px; background:#fff; color:#d4928b; font-weight:bold;">立即参与</button>
+                    </div>
+                </div>
+                
+                <!-- Card 2: 喜马快听 - 蓝绿色渐变 -->
+                <div class="h-card" style="background: linear-gradient(135deg, #7ba8a8 0%, #6b9999 100%); position:relative;">
+                    <div style="position:absolute; top:6px; right:6px;">
+                        <div style="background:#5a8a8a; padding:2px 6px; border-radius:4px;">
+                            <span style="color:#fff; font-size:8px;">种草</span>
+                        </div>
+                    </div>
+                    <div style="padding:10px; height:100%; display:flex; flex-direction:column; justify-content:flex-end;">
+                        <div style="font-size:10px; font-weight:bold; color:#fff; margin-bottom:4px; line-height:1.3;">喜马快听 | 绍<br>宋起点穿越...</div>
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <i class="fas fa-play-circle" style="font-size:10px; color:#fff;"></i>
+                            <button class="h-card-btn" style="padding:3px 8px; font-size:9px; background:rgba(255,255,255,0.9); color:#7ba8a8;">剩1分钟</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 3: 订阅 - 深蓝灰色渐变 -->
+                <div class="h-card" style="background: linear-gradient(135deg, #5a6b7a 0%, #4a5a6a 100%); position:relative;">
+                    <div style="position:absolute; top:6px; right:6px;">
+                        <div style="background:rgba(255,255,255,0.9); padding:2px 6px; border-radius:4px;">
+                            <span style="color:#333; font-size:8px;">订阅</span>
+                        </div>
+                    </div>
+                    <div style="padding:10px; height:100%; display:flex; flex-direction:column; justify-content:flex-end;">
+                        <div style="font-size:10px; font-weight:bold; color:#fff; margin-bottom:4px; line-height:1.3;">订阅 | Vol.169<br>在版纳和普...</div>
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <i class="fas fa-play-circle" style="font-size:10px; color:#fff;"></i>
+                            <button class="h-card-btn" style="padding:3px 8px; font-size:9px; background:rgba(255,255,255,0.9); color:#5a6b7a;">立即收听</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 4: 你稀 - 黄色渐变 -->
+                <div class="h-card" style="background: linear-gradient(135deg, #d4c48a 0%, #c8b87a 100%); position:relative;">
+                    <div style="position:absolute; top:8px; right:8px; font-size:14px;">✨</div>
+                    <div style="padding:10px; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                        <div style="font-size:16px; font-weight:bold; color:#333; text-align:center; margin-bottom:8px;">你稀</div>
+                        <div style="font-size:8px; color:#666; text-align:center;">稀奇古怪</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 你的专属推荐 -->
+        <div class="recommend-section">
+            <div class="section-title">
+                你的专属推荐
+                <span class="section-more"><i class="fas fa-ellipsis-h"></i></span>
+            </div>
+            
+            <!-- 列表卡片区域 -->
+            <div id="list-cards">
+                <!-- JS生成 -->
+            </div>
+            
+            <!-- 双列卡片区域 -->
+            <div class="feed-grid" id="feed-grid">
+                <!-- JS生成卡片 -->
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div style="position:absolute; bottom:0; width:100%; height:50px; background:#fff; display:flex; justify-content:space-around; align-items:center; border-top:1px solid #eee; z-index:10;">
+        <div style="color:var(--primary); display:flex; flex-direction:column; align-items:center; gap:4px;">
+            <i class="fas fa-home" style="font-size:22px;"></i>
+            <span style="font-size:10px;">首页</span>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; color:#999;">
+            <i class="fas fa-headphones" style="font-size:22px;"></i>
+            <span style="font-size:10px;">快听</span>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; color:#999; position:relative;">
+            <i class="fas fa-play-circle" style="font-size:32px;"></i>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; color:#999;">
+            <i class="fas fa-crown" style="font-size:22px;"></i>
+            <span style="font-size:10px;">会员</span>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; color:#999;">
+            <i class="fas fa-user" style="font-size:22px;"></i>
+            <span style="font-size:10px;">我的</span>
+        </div>
+    </div>
+
+    <!-- 沉浸式播放器层 -->
+    <div class="immersive-player" id="player">
+        
+        <!-- 新：顶部导航栏 -->
+        <div class="top-nav-bar">
+            <span class="back-btn" onclick="closePlayer()"><i class="fas fa-chevron-down"></i></span>
+            <div class="tab-switcher">
+                <div id="tab-video" class="switcher-btn active" onclick="switchImmersiveTab('video')">视频</div>
+                <div id="tab-highlights" class="switcher-btn" onclick="switchImmersiveTab('highlights')">亮点</div>
+            </div>
+            <span style="width: 20px;"></span> <!-- 占位符，为了让tab居中 -->
+        </div>
+
+        <!-- 内容面板 -->
+        <div id="video-panel" class="content-panel active">
+            <video id="immersive-video" style="width: 100%; height: 100%; object-fit: cover;" autoplay muted loop>
+                <source src="" type="video/mp4">
+            </video>
+        </div>
+
+        <div id="highlights-panel" class="content-panel">
+            <div id="highlights-panel-content" class="highlight-carousel-track">
+                <!-- JS动态填充结构化亮点 -->
+            </div>
+            <div class="carousel-dots" id="highlights-carousel-dots">
+                <!-- JS动态填充分页点 -->
+            </div>
+        </div>
+
+        <!-- 更新：常驻底部信息栏 -->
+        <div class="player-bottom-bar">
+            <div id="player-bar-tags" class="info-tags">
+                <!-- JS Populated -->
+            </div>
+            <div class="main-info">
+                <img id="player-bar-cover" class="album-cover" src="">
+                <div class="album-details">
+                    <div id="player-bar-title" class="title"></div>
+                    <div id="player-bar-desc" class="description"></div>
+                </div>
+            </div>
+            <div class="progress-cta">
+                <div id="player-bar-progress" class="progress-text"></div>
+                <button class="p-listen-full" onclick="goToAlbum()">畅听全集</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 旧的亮点详情页 (不再使用) -->
+    <div id="highlights-view" style="display: none;"></div>
+
+</div>
+
+<script>
+    // 书籍数据，包含男青年画像内容
+    const books = [
+        {
+            id: 1,
+            persona: 'male-youth',
+            title: "诡秘之主｜这世界比 RPG 更硬核，记住你只是在扮演",
+            author: "爱潜水的乌贼",
+            tags: ["逻辑爆强世界观", "反差魅力主角"],
+            description: "22条神之途径，220种魔药，晋升序列，扮演角色，在成神之路上对抗疯狂与诱惑。",
+            cover: "男青年封面.png",
+            plays: "1.2亿",
+            badge: "会员",
+            ranking: "VIP榜No.1",
+            videoFile: "男青年-视频.mp4",
+            albumTitle: "诡秘之主",
+            episodes: 1488,
+            themeColor: "#1c2a4f",
+            highlights: [
+                {
+                    title: "逻辑爆强世界观（男青年最爱）",
+                    tag: "世界观硬核",
+                    description: "男青年特别吃“逻辑严密的系统”。诡秘的设定像数学公式一样能自洽，复杂但有秩序，越听越沉浸。",
+                    reviews: [
+                        { avatar: "👤", user: "用户_9527", content: "剧情环环相扣、逻辑清晰。", likes: 1247 },
+                        { avatar: "👤", user: "逻辑控", content: "世界观缔造很有画面感，非常有代入感。", likes: 892 },
+                        { avatar: "👤", user: "书虫小王", content: "结构宏大井然有序…一路读下来渐入佳境欲罢不能。", likes: 2156 },
+                        { avatar: "👤", user: "网文爱好者", content: "一部网文，拥有这样庞大且完整的世界观、拥有独特的完整的体系。", likes: 1789 }
+                    ]
+                },
+                {
+                    title: "反差魅力主角（怂但能扛）",
+                    tag: "主角魅力",
+                    description: "男青年喜欢“普通但努力”“害怕但不逃”的主角。他谨慎、聪明、有底线，是最具现实感的男性角色。",
+                    reviews: [
+                        { avatar: "👤", user: "克莱恩粉", content: "真正的现象级小说…克莱恩是一个三观很正…顺理成章不圣母。", likes: 3421 },
+                        { avatar: "👤", user: "男主控", content: "主角性格也很棒，不圣母也不无脑杀戮，有小我也有大爱。", likes: 2567 },
+                        { avatar: "👤", user: "现实主义", content: "怕死怕疼但勇敢…尊重女性，温柔善良但不愚善。", likes: 1893 },
+                        { avatar: "👤", user: "角色分析师", content: "哪怕怂却有担当，坚持着自己制定的原则。", likes: 2234 }
+                    ]
+                },
+                {
+                    title: "智力爽感（推理、细节、伏笔）",
+                    tag: "智商爽文",
+                    description: "不是无脑爽，是“智商爽”。线索像拼图一样拼上去，那种瞬间理解的爽，比升级更刺激。",
+                    reviews: [
+                        { avatar: "👤", user: "推理迷", content: "这本真的全员智商在线，所以听的时候也得带着脑子。", likes: 4567 },
+                        { avatar: "👤", user: "细节控", content: "重复描述的半高丝绸礼帽都别有一番韵味。", likes: 1234 },
+                        { avatar: "👤", user: "伏笔收集者", content: "220种魔药有各自对应的扮演方法…世界架构宏大。", likes: 2890 },
+                        { avatar: "👤", user: "智力党", content: "伏笔…最后成功圆回来。", likes: 3456 }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 2,
+            persona: 'female-youth',
+            title: "诡秘之主｜这是写给女孩的浪漫成长诗",
+            author: "爱潜水的乌贼",
+            tags: ["女性角色发光", "氛围感美学"],
+            description: "在维多利亚时代的迷雾中，探索神秘学与蒸汽朋克，见证一位普通人的史诗成长。",
+            cover: "女青年封面.png",
+            plays: "9875万",
+            badge: "会员",
+            ranking: "新品榜No.3",
+            videoFile: "男青年-视频.mp4",
+            albumTitle: "诡秘之主",
+            episodes: 1488,
+            themeColor: "#cfa98b",
+            highlights: [
+                {
+                    title: "温柔真实的主角（安全感型）",
+                    tag: "安全感男主",
+                    description: "不是油腻大男主、不是傲慢装逼，而是有底线、有分寸、有良知。女青年从他身上看到“善良的力量”。",
+                    reviews: [
+                        { avatar: "🌸", user: "克莱恩的小粉丝", content: "真正的现象级小说…克莱恩是一个三观很正…顺理成章不圣母。", likes: 4321 },
+                        { avatar: "🌸", user: "爱做梦的鱼", content: "哪怕怂却有担当，拼命着不忘记自己的人性。", likes: 3129 }
+                    ]
+                },
+                {
+                    title: "女性角色很美、很强、很独立",
+                    tag: "独立女性群像",
+                    description: "奥黛丽等角色都不是工具人，每个人都在表达“女性自身的力量”。这是女青年读者特别爱的部分。",
+                    reviews: [
+                        { avatar: "🌸", user: "奥黛丽正义", content: "奥黛丽是我见过最完美的女性角色，她就如同宝石一样纯净，闪闪发光，且一点也不刺眼。", likes: 5890 },
+                        { avatar: "🌸", user: "书中自有颜如玉", content: "配角的故事里，每个人都是自己的主角。", likes: 2980 }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 3,
+            persona: 'male-middle-aged',
+            title: "诡秘之主｜一部讲透成人世界权力规则的硬核故事",
+            author: "爱潜水的乌贼",
+            tags: ["力量有代价", "成年人自律课"],
+            description: "力量的代价是责任，序列的晋升是枷锁。一部关于权力、扮演与自我坚守的深刻寓言。",
+            cover: "男中年封面.png",
+            plays: "8890万",
+            badge: "会员",
+            ranking: "畅销榜No.2",
+            videoFile: "男青年-视频.mp4",
+            albumTitle: "诡秘之主",
+            episodes: 1488,
+            themeColor: "#4a4a4a",
+            highlights: [
+                 {
+                    title: "力量有代价（成熟的权力观）",
+                    tag: "权力代价",
+                    description: "越往上，越危险；越强大，越容易迷失。这是诡秘写给成年男人的一封“权力告诫书”。",
+                    reviews: [
+                        { avatar: "🧐", user: "职场老鸟", content: "越是高位，越接近疯狂。", likes: 2109 },
+                        { avatar: "🧐", user: "人性观察家", content: "哪怕怂却有担当…坚持着自己制定的原则。", likes: 1876 }
+                    ]
+                },
+                {
+                    title: "扮演法 = 成年人的自律课",
+                    tag: "自律课",
+                    description: "诡秘的“扮演法”是最成熟的设定之一：你能扮演任何角色，但不能忘记自己是谁。",
+                    reviews: [
+                        { avatar: "🧐", user: "人生如戏", content: "怕死怕疼但勇敢…温柔善良但不愚善。", likes: 1543 },
+                        { avatar: "🧐", user: "洞察者", content: "背负的太多…这条路最终只有他自己。", likes: 1322 }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 4,
+            persona: 'female-middle-aged',
+            title: "诡秘之主｜在失序的世界，如何守护一个清醒的自己",
+            author: "爱潜水的乌贼",
+            tags: ["女性角色闪光", "情绪价值"],
+            description: "见证女性角色的独立与光芒，感受在孤独与责任中的每一次温柔而坚定的选择。",
+            cover: "女中年封面.png",
+            plays: "7654万",
+            badge: "会员",
+            ranking: "口碑榜No.1",
+            videoFile: "男青年-视频.mp4",
+            albumTitle: "诡秘之主",
+            episodes: 1488,
+            themeColor: "#4b4269",
+            highlights: [
+                {
+                    title: "女性角色闪光（力量 × 清醒 × 成长）",
+                    tag: "女性力量",
+                    description: "诡秘里的女性角色不是“被保护者”，而是有明确人生轨迹，有成长、有智慧、有行动力的重要角色。",
+                    reviews: [
+                        { avatar: "优雅", user: "人间清醒", content: "奥黛丽是我见过最完美的女性角色，她就如同宝石一样纯净，闪闪发光，且一点也不刺眼。", likes: 3456 },
+                        { avatar: "优雅", user: "独立女性", content: "配角的故事里，每个人都是自己的主角。", likes: 2890 }
+                    ]
+                },
+                {
+                    title: "主角的善良与清醒（成年女性最认可的男性气质）",
+                    tag: "成熟男性",
+                    description: "他不会强势、不会油腻、不会滥权；但也不会懦弱。他是那种“温柔而坚定”的人。",
+                    reviews: [
+                        { avatar: "优雅", user: "品质生活家", content: "喜欢克莱恩…拥有美好的共情感与同理心。", likes: 2134 },
+                        { avatar: "优雅", user: "看遍繁花", content: "哪怕怂却有担当…坚持着自己制定的原则。", likes: 1879 }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 5,
+            persona: 'male-elderly',
+            title: "诡秘之主｜一个正直、稳重、有分寸的品质故事",
+            author: "爱潜水的乌贼",
+            tags: ["故事扎实可信", "主角正直"],
+            description: "故事逻辑严密，节奏沉稳，演绎一个有原则、有担当、有底线的成熟男人的史诗。",
+            cover: "https://images.unsplash.com/photo-1472190649224-495422e1b602?auto=format&fit=crop&w=400&q=80",
+            plays: "5432万",
+            badge: "会员",
+            ranking: "经典榜No.5",
+            videoFile: "男青年-视频.mp4",
+            albumTitle: "诡秘之主",
+            episodes: 1488,
+            themeColor: "#3d3d3d",
+            highlights: [
+                {
+                    title: "故事扎实可信（老年用户强调“好听、听得懂”）",
+                    tag: "品质故事",
+                    description: "老年用户不喜欢乱七八糟的爽文，诡秘的故事逻辑稳、节奏稳、细节稳。",
+                    reviews: [
+                        { avatar: "👴", user: "老书迷", content: "剧情环环相扣、逻辑清晰。", likes: 987 },
+                        { avatar: "👴", user: "退休张教授", content: "结构宏大井然有序…一路读下来渐入佳境欲罢不能。", likes: 876 }
+                    ]
+                },
+                 {
+                    title: "主角正直、有分寸、不乱来",
+                    tag: "正直品格",
+                    description: "男老年用户喜欢有担当、有分寸、有底线的角色。他们在主角身上看到“那个年代的男人味”。",
+                    reviews: [
+                        { avatar: "👴", user: "陈年老茶", content: "克莱恩是一个三观很正…顺理成章不圣母。", likes: 1123 },
+                        { avatar: "👴", user: "岁月留声", content: "哪怕怂却有担当…坚持着自己制定的原则。", likes: 1056 }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 6,
+            persona: 'female-elderly',
+            title: "诡秘之主｜适合静静听的温柔故事，像陪伴",
+            author: "爱潜水的乌贼",
+            tags: ["温柔善良的主角", "节奏稳"],
+            description: "故事温柔，节奏平稳，声音有温度。适合在睡前、散步时，静静感受陪伴的力量。",
+            cover: "https://images.unsplash.com/photo-1547635289-3544a83b1a72?auto=format&fit=crop&w=400&q=80",
+            plays: "4321万",
+            badge: "会员",
+            ranking: "治愈榜No.1",
+            videoFile: "男青年-视频.mp4",
+            albumTitle: "诡秘之主",
+            episodes: 1488,
+            themeColor: "#8c7a6b",
+            highlights: [
+                {
+                    title: "温柔善良的主角（适合女老年的情绪共鸣）",
+                    tag: "善良主角",
+                    description: "女老年读者最喜欢“心好、有分寸、有担当”的角色。诡秘主角是那种让人放心、让人心疼、让人尊敬的孩子。",
+                    reviews: [
+                        { avatar: "👵", user: "爱听故事的王奶奶", content: "主角性格也很棒，不圣母也不无脑杀戮，有小我也有大爱。", likes: 876 },
+                        { avatar: "👵", user: "夕阳红", content: "喜欢克莱恩…拥有美好的共情感与同理心。", likes: 765 }
+                    ]
+                },
+                {
+                    title: "故事温柔、节奏稳、不吵不乱",
+                    tag: "节奏平稳",
+                    description: "故事逻辑清晰、节奏平衡，不像很多玄幻那样乱七八糟，非常适合慢慢听。",
+                     reviews: [
+                        { avatar: "👵", user: "李阿姨", content: "剧情环环相扣、逻辑清晰。", likes: 654 },
+                        { avatar: "👵", user: "时光漫步", content: "一路读下来渐入佳境。", likes: 543 }
+                    ]
+                }
+            ]
+        }
+    ];
+
+    // 列表卡片数据 (保持不变)
+    const listCards = [
+        { title: "长谈·脱不花", desc: "与人长谈，和别人上个请教，就是最好的学习", reco: "100%", plays: "9.3万", cover: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80" },
+        { title: "今日圆桌派", desc: "多角度解读，拓展认知边界", reco: "87%", plays: "472万", cover: "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?auto=format&fit=crop&w=200&q=80", badge: "NEW POINTS" },
+        { title: "董慧琦：正念冥想课", desc: "期坦福正念冥想，助你一夜好眠", reco: "", plays: "440万", cover: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=200&q=80", badge: "SVIP" }
+    ];
+
+    let currentBook = null;
+    let carouselInterval = null;
+    let autoMode = true;
+    let highlightCarouselInterval = null;
+    let currentHighlightIndex = 0;
+ 
+     document.addEventListener('DOMContentLoaded', function() {
+         // 初始化列表卡片
+         const listCardsContainer = document.getElementById('list-cards');
+         if (listCardsContainer) {
+             // 清空，防止重复渲染
+             listCardsContainer.innerHTML = '';
+             listCards.forEach(item => {
+                 const card = document.createElement('div');
+                 card.className = 'list-card';
+                 card.innerHTML = `
+                     <div class="list-card-cover" style="background-image: url('${item.cover}')">
+                         ${item.badge ? `<div style="position:absolute; top:4px; left:4px; background:#ffd700; color:#333; font-size:8px; padding:2px 4px; border-radius:3px; font-weight:bold;">${item.badge}</div>` : ''}
+                     </div>
+                     <div class="list-card-info">
+                         <div class="list-card-title">${item.title}</div>
+                         <div class="list-card-desc">${item.desc}</div>
+                         <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                             ${item.reco ? `<span style="font-size:11px; color:#666;">推荐值${item.reco}</span>` : ''}
+                             <span style="font-size:11px; color:#999;"><i class="fas fa-play-circle" style="margin-right:3px;"></i>${item.plays}</span>
+                         </div>
+                     </div>
+                 `;
+                 listCardsContainer.appendChild(card);
+             });
+         }
+ 
+         const feedGrid = document.getElementById('feed-grid');
+          
+          if (feedGrid) {
+              // 清空现有grid
+              feedGrid.innerHTML = '';
+              books.forEach(book => {
+                  try {
+                      const card = createGridCard(book);
+                      feedGrid.appendChild(card);
+                  } catch (error) {
+                      console.error('Error creating card for book:', book, error);
+                  }
+              });
+          }
+     });
+     
+     function createGridCard(book) {
+         const card = document.createElement('div');
+         card.className = 'grid-card';
+         
+         // 确保 tags 存在且是数组
+         const tags = Array.isArray(book.tags) ? book.tags : [];
+         
+         card.innerHTML = `
+             <div class="grid-card-cover" style="background-image: url('${book.cover}')">
+                <div class="card-badge" style="background: ${book.badge === '会员' ? 'var(--primary)' : '#ffd700'}; color: ${book.badge === '会员' ? '#fff' : '#333'};">${book.badge}</div>
+             </div>
+             <div class="grid-card-info">
+                 <div class="grid-card-title">${book.title}</div>
+                 <div>
+                    <div class="grid-card-tags">
+                        ${tags.map(tag => `<span class="grid-tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="grid-card-meta">
+                        <i class="fas fa-play-circle" style="margin-right:3px; color: #999;"></i>
+                        <span style="color: #999;">${book.plays || '未知'}</span>
+                    </div>
+                 </div>
+             </div>
+         `;
+         card.onclick = () => openPlayer(book);
+         return card;
+     }
+
+     // 打开播放器
+     function openPlayer(book) {
+         currentBook = book;
+         const player = document.getElementById('player');
+         
+         // 1. 设置视频
+         const video = document.getElementById('immersive-video');
+         if (book.videoFile) {
+             video.src = book.videoFile;
+             video.play().catch(e => console.error("视频播放失败:", e));
+         }
+
+         // 2. 设置亮点页
+         const highlightsPanel = document.getElementById('highlights-panel');
+         const highlightsContent = document.getElementById('highlights-panel-content');
+         const highlightsBarTitle = document.getElementById('highlights-bar-title');
+         const dotsContainer = document.getElementById('highlights-carousel-dots');
+
+         // 2.1 设置背景色
+         highlightsPanel.style.backgroundColor = book.themeColor || '#181818';
+         document.getElementById('player-bar-title').innerText = book.albumTitle || book.title;
+         document.getElementById('player-bar-desc').innerText = book.description || ''; // 设置描述
+
+         // 2.2 填充内容
+         highlightsContent.innerHTML = '';
+         dotsContainer.innerHTML = ''; // 清空分页点
+         if (book.highlights) {
+            book.highlights.forEach((highlight, index) => {
+                // 创建 slide
+                const slide = document.createElement('div');
+                slide.className = 'highlight-slide';
+                slide.innerHTML = `
+                    <div class="slide-tag">${highlight.tag}</div>
+                    <div class="slide-title">${highlight.title}</div>
+                    <div class="slide-review-card">
+                        <div class="review-author">
+                            <div class="avatar">${highlight.reviews[0].avatar}</div>
+                            <div class="username">${highlight.reviews[0].user}</div>
+                        </div>
+                        <div class="review-text">“${highlight.reviews[0].content}”</div>
+                    </div>
+                `;
+                highlightsContent.appendChild(slide);
+
+                // 创建分页点
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => showHighlightSlide(index);
+                dotsContainer.appendChild(dot);
+            });
+         }
+
+         // 3. 重置到视频tab并打开播放器
+         switchImmersiveTab('video');
+         player.classList.add('active');
+         startHighlightCarousel(); // 打开播放器时开始轮播
+     }
+
+     // 关闭播放器
+     function closePlayer() {
+         document.getElementById('player').classList.remove('active');
+         const video = document.getElementById('immersive-video');
+         video.pause();
+         stopHighlightCarousel(); // 关闭时停止轮播
+     }
+     
+     // 切换沉浸页的Tab
+     function switchImmersiveTab(tabName) {
+        const player = document.getElementById('player');
+        const videoPanel = document.getElementById('video-panel');
+        const highlightsPanel = document.getElementById('highlights-panel');
+        const tabVideo = document.getElementById('tab-video');
+        const tabHighlights = document.getElementById('tab-highlights');
+        const video = document.getElementById('immersive-video');
+        const bottomBar = document.querySelector('.player-bottom-bar');
+
+        if (tabName === 'video') {
+            videoPanel.classList.add('active');
+            highlightsPanel.classList.remove('active');
+            tabVideo.classList.add('active');
+            tabHighlights.classList.remove('active');
+            bottomBar.style.display = 'flex';
+            video.play().catch(e => {}); // 切换回来时尝试播放
+            stopHighlightCarousel(); // 停止轮播
+        } else {
+            videoPanel.classList.remove('active');
+            highlightsPanel.classList.add('active');
+            tabVideo.classList.remove('active');
+            tabHighlights.classList.add('active');
+            bottomBar.style.display = 'none';
+            video.pause(); // 切换走时暂停视频
+            startHighlightCarousel(); // 开始轮播
+        }
+     }
+
+     // --- 亮点轮播逻辑 ---
+     function startHighlightCarousel() {
+        if (highlightCarouselInterval) clearInterval(highlightCarouselInterval);
+        currentHighlightIndex = 0;
+        showHighlightSlide(currentHighlightIndex);
+        
+        highlightCarouselInterval = setInterval(() => {
+            const totalSlides = currentBook?.highlights?.length || 0;
+            if (totalSlides > 1) {
+                currentHighlightIndex = (currentHighlightIndex + 1) % totalSlides;
+                showHighlightSlide(currentHighlightIndex);
+            }
+        }, 5000); // 5秒切换一次
+     }
+
+     function stopHighlightCarousel() {
+        if (highlightCarouselInterval) {
+            clearInterval(highlightCarouselInterval);
+            highlightCarouselInterval = null;
+        }
+     }
+
+     function showHighlightSlide(index) {
+        const track = document.getElementById('highlights-panel-content');
+        const dots = document.querySelectorAll('#highlights-carousel-dots .dot');
+        const totalSlides = dots.length;
+
+        if (index >= 0 && index < totalSlides) {
+            currentHighlightIndex = index;
+            track.style.transform = `translateX(-${index * 100}%)`;
+            
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
+     }
+     
+     // 显示合集列表 (保留弹窗逻辑)
+     function showEpisodeList() {
+         if (!currentBook || !currentBook.episodes) {
+             alert('暂无合集信息');
+             return;
+         }
+         const episodeListText = currentBook.episodes.join('\n');
+         alert('合集列表：\n' + episodeListText);
+     }
+ 
+     // 轮播逻辑 (不再需要，但保留函数以防其他地方调用)
+     function setupCarousel(images) {
+        const track = document.getElementById('carousel-track');
+        track.innerHTML = '';
+        images.forEach(img => {
+            const div = document.createElement('div');
+            div.className = 'carousel-item comic-filter';
+            div.style.backgroundImage = `url('${img}')`;
+            track.appendChild(div);
+        });
+
+        let index = 0;
+        clearInterval(carouselInterval);
+        
+        // 自动轮播
+        carouselInterval = setInterval(() => {
+            if(!autoMode) return;
+            index = (index + 1) % images.length;
+            track.style.transform = `translateX(-${index * 100}%)`;
+        }, 3000); // 3秒切换一张
+    }
+
+    // 切换交互模式
+    function toggleAutoMode() {
+        autoMode = !autoMode;
+        const txt = document.getElementById('mode-text');
+        txt.innerText = autoMode ? "自动演示中" : "手动浏览";
+        txt.parentElement.style.background = autoMode ? "rgba(0,0,0,0.6)" : "var(--primary)";
+    }
+
+    // Tab 切换逻辑
+    // function switchImmersiveTab(type) { ... }
+
+    // 跳转逻辑
+    function goToAlbum() {
+        // 简单的交互反馈
+        const btn = document.querySelector('.p-listen-full');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 跳转中...';
+        setTimeout(() => {
+            alert(`正在前往《${currentBook.title}》专辑全集页面...`);
+            btn.innerHTML = '畅听全集 <i class="fas fa-angle-right"></i>';
+        }, 800);
+    }
+
+    // 初始化时默认选中第一个Tab
+    // (在真实环境中需要在 openPlayer 时调用一次 ensure active state)
+
+</script>
+</body>
+</html>
