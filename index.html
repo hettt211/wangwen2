@@ -98,7 +98,10 @@
         .feed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-card { background: #fff; border-radius: 12px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
         .grid-card:active { opacity: 0.8; }
-        .grid-card-cover { width: 100%; aspect-ratio: 3/4; background-size: cover; background-position: center; position: relative; }
+        .grid-card-cover { width: 100%; aspect-ratio: 3/4; background-size: cover; background-position: center; position: relative; background-color: #f0f0f0; }
+        .grid-card-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .grid-card-cover.loading { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .card-badge { display: none; /* 彻底隐藏角标 */ }
         .grid-card-info { padding: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
         .grid-card-title { font-size: 14px; font-weight: 500; color: #333; line-height: 1.4; }
@@ -1059,9 +1062,10 @@
           if (feedGrid) {
               // 清空现有grid
               feedGrid.innerHTML = '';
-              books.forEach(book => {
+              books.forEach((book, index) => {
                   try {
-                      const card = createGridCard(book);
+                      // 前4张卡片（首屏可见）立即加载，其他懒加载
+                      const card = createGridCard(book, index < 4);
                       feedGrid.appendChild(card);
                   } catch (error) {
                       console.error('Error creating card for book:', book, error);
@@ -1070,7 +1074,7 @@
           }
      });
      
-    function createGridCard(book) {
+    function createGridCard(book, eagerLoad = false) {
         const card = document.createElement('div');
         card.className = 'grid-card';
         
@@ -1079,12 +1083,15 @@
 
         // 判断是否为最后三张卡片（id >= 11）
         const isInlineLayout = book.id >= 11;
+        
+        // 首屏可见的图片立即加载，其他懒加载
+        const loadingAttr = eagerLoad ? 'eager' : 'lazy';
 
         if (isInlineLayout) {
             // 最后三张卡片：标签和标题在一行
             card.innerHTML = `
-                <div class="grid-card-cover" style="background-image: url('${basePath + book.cover}')">
-                   <!-- 角标被CSS隐藏 -->
+                <div class="grid-card-cover loading">
+                   <img loading="${loadingAttr}" src="${basePath + book.cover}" alt="${book.albumTitle}" onload="this.parentElement.classList.remove('loading')" onerror="this.parentElement.style.background='#f0f0f0'">
                 </div>
                 <div class="grid-card-info">
                     <div class="grid-card-title">${book.albumTitle}</div>
@@ -1097,8 +1104,8 @@
         } else {
             // 前10张卡片：原有布局
             card.innerHTML = `
-                <div class="grid-card-cover" style="background-image: url('${basePath + book.cover}')">
-                   <!-- 角标被CSS隐藏 -->
+                <div class="grid-card-cover loading">
+                   <img loading="${loadingAttr}" src="${basePath + book.cover}" alt="${book.albumTitle}" onload="this.parentElement.classList.remove('loading')" onerror="this.parentElement.style.background='#f0f0f0'">
                 </div>
                 <div class="grid-card-info">
                     <div>
@@ -1128,11 +1135,14 @@
              video.play().catch(e => console.error("视频播放失败:", e));
          }
 
-         // 2. 设置常驻底部信息栏
-         document.getElementById('player-bar-title').innerText = book.albumTitle || book.title;
-         document.getElementById('player-bar-cover').src = basePath + book.cover;
-         document.getElementById('player-bar-desc').innerText = book.description || '';
-         document.getElementById('player-bar-progress').innerText = `已完结 · 共${book.episodes || 0}集`;
+        // 2. 设置常驻底部信息栏
+        document.getElementById('player-bar-title').innerText = book.albumTitle || book.title;
+        const coverImg = document.getElementById('player-bar-cover');
+        coverImg.src = basePath + book.cover;
+        coverImg.loading = 'eager'; // 播放器中的图片立即加载
+        coverImg.onerror = function() { this.style.display = 'none'; };
+        document.getElementById('player-bar-desc').innerText = book.description || '';
+        document.getElementById('player-bar-progress').innerText = `已完结 · 共${book.episodes || 0}集`;
          
          const tagsContainer = document.getElementById('player-bar-tags');
          tagsContainer.innerHTML = '';
