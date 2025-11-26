@@ -1463,8 +1463,10 @@
     ];
 
     let currentBook = null;
+    let currentCardIndex = 0;
+    let translateY = 0; // 全局变量保存当前的translateY值
  
-     document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
          // 初始化列表卡片
          const listCardsContainer = document.getElementById('list-cards');
          if (listCardsContainer) {
@@ -1630,13 +1632,12 @@
              updatePlayerDock(book);
          }, 100);
          
-         // 6. 添加触摸滑动事件监听
-         setupTouchEvents(landingPageContent);
+         // 6. 添加触摸滑动事件监听（仅在首次或需要重新绑定时）
+         if (!landingPageContent.dataset.touchEventsSetup) {
+             setupTouchEvents(landingPageContent);
+             landingPageContent.dataset.touchEventsSetup = 'true';
+         }
      }
-     
-     // 当前卡片索引
-     let currentCardIndex = 0;
-     let translateY = 0; // 全局变量保存当前的translateY值
      
     // 更新卡片堆叠显示 - 抖音式布局
     function updateCardsStack() {
